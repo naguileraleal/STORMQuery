@@ -20,6 +20,7 @@ import serial
 
 from plotly.offline import offline
 import plotly.express as px
+import plotly.graph_objects as go
 
 import pandas as pd
 import numpy as np

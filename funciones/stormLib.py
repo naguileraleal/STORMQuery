@@ -21,6 +21,7 @@ import serial
 
 from plotly.offline import offline
 import plotly.express as px
+import plotly.graph_objects as go
 
 import pandas as pd
 import numpy as np
@@ -269,6 +270,9 @@ def get_temp(dbnames, path, instrumentAddress, dateRange):
 
 
 # ARCHIVO getSampleInstruments.py
+import logging
+
+
 def get_sample_instruments(idMuestra, c):
 
     # idMuestra es de la forma ['codigoMuestra','codigoSubMuestra']
@@ -283,13 +287,13 @@ def get_sample_instruments(idMuestra, c):
     La query larga hace:
 
     1. Q2 = SELECT<muestras.muestra = sampleId[0] AND muestras.submuestra =  sampleId[1] and muestras.deleted = 0>(muestras)
-    2. Q1 = PROJECT<id,endereco>(gabinetes)
+    2. Q1 = PROJECT<id,nombre,endereco>(gabinetes)
     3. J1 = Q1 JOIN<Q1.id = Q2.idInstrumento> Q2
-    4. RES = PROJECT<ingreso,salida,endereco>(J1)
+    4. RES = PROJECT<nombre,ingreso,salida,endereco>(J1)
     '''
 
-    RES = "select ingreso,salida,endereco from (\
-        ((select id,endereco from gabinetes where deleted=0) as q1)\
+    RES = "select nombre,ingreso,salida,endereco from (\
+        ((select id,nombre,endereco from gabinetes where deleted=0) as q1)\
         join ((select idInstrumento,ingreso,salida from muestras where \
         deleted=0 and muestra=? and submuestra=?) as q2)\
         on q1.id = q2.idinstrumento)"
@@ -303,8 +307,9 @@ def get_sample_instruments(idMuestra, c):
     res = c.fetchall()
 
     data = pd.DataFrame(
-        [*res],columns=['ingreso','salida','endereco']
+        [*res],columns=['nombre','ingreso','salida','endereco']
     )
+
 
     return data
 
@@ -319,6 +324,15 @@ def is_command(barcode):
         return barcode
     else:
         return False
+
+
+# ARCHIVO codigosError.py
+from enum import Enum
+
+class CodigosError(Enum):
+    NO_EXISTE_MUESTRA = -1
+    FECHA_INVALIDA = -2
+    NO_HAY_DATOS = -3
 
 
 # ARCHIVO init.py
@@ -386,133 +400,106 @@ def init():
 
 
 # ARCHIVO query_sin_lector.py
+from datetime import date
+from funciones.codigosError import CodigosError
 import logging
 
+def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
+    # TODO: De que tipo es fechaInicio fechaFin??
 
-def query_sin_lector():
+    logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
+
+    res = None
+
     mdb = utils.nuevaConexionMDB()
     c = mdb.cursor()
 
-    while True:
-        print('Ingrese codigos de muestra y submuestra')
-        sample = input('Muestra: ')
-        subSample = input('Sub Muestra: ')
+    if is_sample([muestra,subMuestra], c):
 
-        # Una variable para continuar con el programa una vez que el usuario entre correctamente las fechas
-        goAhead=False
+        sample_ins = get_sample_instruments([muestra,subMuestra], c)
+        # sample_ins tiene para cada instrumento de la muestra
+        # ingreso, egreso y endereco
+        logging.debug('muestra: {} submuestra: {}'.format(muestra,subMuestra))
+        logging.debug('sample_ins:')
+        logging.debug(sample_ins)
 
-        if is_sample([sample,subSample], c):
+        data = pd.DataFrame()
 
-            print('Entre fechas en formato YYYY,MM,DD')
-            print('Separe año mes y dia usando comas')
-            print('Luego presione ENTER')
+        # A get_temp le paso type(dateRange) = (datetime, datetime)
+        for index, row in sample_ins.iterrows():
+            #%H:%M:%S
+            ingreso = datetime.strptime(str(row['ingreso']),'%Y-%m-%d %H:%M:%S').date()
+            egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S').date()
 
-            while not goAhead:
-                try:
-                    initDate = input('Fecha de inicio:')
-                    # Si la fecha de inicio es vacia, que busque desde el principio de la base de datos
-                    if (len(initDate) == 0):
-                        initDate = datetime(1970,1,1)
-                        print("Desde el primer dato")
-                    else:
-                        initDate = initDate.split(sep=',')
-                        initDate = datetime(int(initDate[0]), int(initDate[1]), int(initDate[2]))
-
-                    finDate = input('Fecha de fin:')
-                    # Si la fecha de fin es vacia, que busque hasta el ultimo dato que tenga
-                    if (len(finDate) == 0):
-                        finDate = datetime.now() + timedelta(days=1) # Mañana
-                        print("Hasta el ultimo dato")
-                    else:
-                        finDate = finDate.split(sep=',')
-                        finDate = datetime(int(finDate[0]), int(finDate[1]), int(finDate[2]))
-
-                    if initDate == datetime(1970,1,1):
-                        pass
-                    else:
-                        print(f'Desde: {initDate}')
-                    if finDate > datetime.now():
-                        pass
-                    else:
-                        print(f'Hasta: {finDate.strftime("%Y-%m-%d %H:%M:%S")}')
-
-                    goAhead=True
-
-                except ValueError:
-                    print('Lo que escribio no es una fecha valida')
-                    print('Por favor, escriba una fecha de acuerdo al formato mencionado')
-                    print('\n')
-
-            sample_ins = get_sample_instruments([sample,subSample], c)
-            # sample_ins tiene para cada instrumento de la muestra
-            # ingreso, egreso y endereco
-            logging.debug('muestra: {} submuestra: {}'.format(sample,subSample))
-            logging.debug('sample_ins:')
-            logging.debug(sample_ins)
-
-            data = pd.DataFrame()
-
-            print('Buscando datos')
-
-            # A get_temp le paso type(dateRange) = (datetime, datetime)
-            for index, row in sample_ins.iterrows():
-                ingreso = datetime.strptime(str(row['ingreso']),'%Y-%m-%d %H:%M:%S')
-                egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S')
-
-                # Si la muestra salio del instrumento antes del comienzo de mi busqueda (egreso < initDate)
-                # no tiene sentido buscar datos en este instrumento
-
-                # Si la muestra entro al instrumento despues de finalizada mi busqueda (ingreso > finDate)
-                # tampoco tiene sentido buscar datos en este instrumento
-
-                if egreso > initDate and ingreso < finDate:
-
-                    if ingreso >= initDate:
-                        idate = ingreso
-                    else:
-                        idate = initDate
-
-                    if egreso <= finDate:
-                        edate = egreso
-                    else:
-                        edate = finDate
-
-                    prevlen = len(data.index)
-
-                    data = data.append(
-                        get_temp_from_db('',
-                        row['endereco'],
-                        ( idate, edate )
-                        )
-                        )
-                    newlen = len(data.index)
-                    if prevlen !=  newlen:
-                        sys.stdout.flush()
-                        sys.stdout.write('\r')
-                        print('{} datos encontrados'.format(len(data.index)))
-
-
-            if data.empty:
-                print(
-                    'No hay datos para la muestra {} entre {} y {}'.format(sample,initDate,finDate))
+            if fechaInicio == None:
+                fechaInicio = date(1970,1,1)
             else:
-                plot = px.line(data_frame=data, x='time', y='temp')
-                offline.plot(
-                    plot,
-                    filename=f"{sample}_{initDate.strftime('%Y-%m-%d')}\
-                        _{finDate.strftime('%Y-%m-%d')}.html",
-                    auto_open=True)
+                fechaInicio = date.fromisoformat(fechaInicio)
+            
+            if fechaFin == None:
+                fechaFin = datetime.now().date()
+            else:
+                fechaFin = date.fromisoformat(fechaFin)
+            
 
-            mdb.close()
+            # Si la muestra salio del instrumento antes del comienzo de mi busqueda (egreso < fechaInicio)
+            # no tiene sentido buscar datos en este instrumento
 
-            return
+            # Si la muestra entro al instrumento despues de finalizada mi busqueda (ingreso > fechaFin)
+            # tampoco tiene sentido buscar datos en este instrumento
 
-        elif is_command(sample) == 'FIN':
-            print("Comando FIN leido, saliendo de QUERY")
-            return
+            if egreso > fechaInicio and ingreso < fechaFin:
 
+                if ingreso >= fechaInicio:
+                    idate = ingreso
+                else:
+                    idate = fechaInicio
+
+                if egreso <= fechaFin:
+                    edate = egreso
+                else:
+                    edate = fechaFin
+
+                logging.debug('idate: {} edate: {}'.format(idate,edate))
+
+                data = get_temp_from_db('',
+                    row['endereco'],
+                    ( idate, edate )
+                    )
+                if not data.empty:
+                    plot.add_trace(
+                        go.Scatter(
+                            x=data.iloc[:,0],
+                            y=data.iloc[:,1],
+                            name=row['nombre']
+                        )
+                    )
+
+        if data.empty:
+            res = CodigosError.NO_HAY_DATOS
+            logging.debug(
+                'no hay datos para muestra: {} submuestra: {}'.format(muestra, subMuestra)
+                )
         else:
-            print('Ese codigo no corresponde a una muestra')
+
+            plot.update_layout(
+                title='Muestra: {} Submuestra: {}'.format(muestra,subMuestra),
+                xaxis_title='Fecha',
+                yaxis_title='Temperatura ºC',
+                legend_title='Gabinete',
+                showlegend=True
+            )
+
+
+            logging.debug('se encontraron {} datos para muestra: {} submuestra: {}'.format(data.shape[0],muestra,subMuestra))
+
+        mdb.close()
+
+        return res
+
+    else:
+        return CodigosError.NO_EXISTE_MUESTRA
+
 
 
 

@@ -1,0 +1,21 @@
+#app-header-label{
+    font-size: 6vw;
+    padding-left: 0.5%;
+    padding-right: 0.5%;
+    padding-bottom: 0.5%;
+    padding-top: 0.5%;
+    margin-top: 0%;
+    margin-bottom: 0%;
+    background-color: antiquewhite;
+}
+
+#app-subheader-label{
+    font-size: 4vw;
+    padding-left: 0.5%;
+    padding-right: 0.5%;
+    padding-bottom: 0.5%;
+    padding-top: 0.5%;
+    margin-top: 0%;
+    margin-bottom: 0%;
+    background-color: aquamarine;
+}
