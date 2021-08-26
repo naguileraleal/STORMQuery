@@ -3,7 +3,29 @@ from funciones.codigosError import CodigosError
 import logging
 
 def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
-    # TODO: De que tipo es fechaInicio fechaFin??
+    '''
+    Parametros
+    ----------
+    muestra : str
+        Codigo de muestra de la muestra
+
+    subMuestra : str
+        Codigo de sub-muestra de la muestra
+
+    fechaInicio : str
+        Limite inferior del rango de fechas de la consulta (Formato ISO)
+    
+    fechaFin : str
+        Limite superior del rango de fechas de la consulta (Formato ISO)
+    
+    Devuelve
+    --------
+    Si se genera un grafico (no vacio) para la muestra, devuelve un plot de tipo plotly.go.Figure
+    
+    Si la consulta retorna vacia, devuelve CodigosError.NO_HAY_DATOS
+
+    Si no existe una muestra con los identificadores dados en la entrada, devuelve CodigosError.NO_EXISTE_MUESTRA
+    '''
 
     logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
 
