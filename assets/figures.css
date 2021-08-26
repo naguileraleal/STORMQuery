@@ -1,0 +1,9 @@
+#graph-container{
+    border-radius: 5px;
+    border-color: #2c3e50;
+    border-width: 1px;
+    border-style: solid;
+
+    margin-top: 3vh;
+    margin-bottom: 3vh;
+}
