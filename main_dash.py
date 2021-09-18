@@ -287,8 +287,8 @@ if __name__ == '__main__':
     filename='./log/main-dash-{}.log'.format(
         datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
         ),
-    level=logging.DEBUG,
+    level=logging.getLevelName(const.logLevel),
     encoding='utf-8',
     format='%(levelname)s: %(filename)s - %(module)s - %(funcName)s - %(lineno)d - %(message)s'
     )
-    app.run_server(port=1111, debug=True)
+    app.run_server(port=1111, debug=const.dashDebugMode)
