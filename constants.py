@@ -22,11 +22,16 @@ INSTRUMENT_MODEL_NUMBER = {
     26:'ti33ri'
     }
 
-# Puerto serial del lector de codigos de barras
-SCANNER_SERIAL_PORT = ''
-
 # Comandos
 COMMANDS = {
     1:'QUERY',
     0:'FIN'
 }
+
+# Logging level
+# Use CRITICAL for production
+# Use DEBUG for debugging
+logLevel = 'CRITICAL'
+
+# Dash debug server mode
+dashDebugMode = False
