@@ -113,7 +113,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                     id='muestra-label'
                 ),
                 dcc.Input(
-                    type='number',
+                    type='text',
                     className='text-input',
                     id='codigo-muestra-input',
                     placeholder=''
@@ -124,7 +124,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                     id='submuestra-label'
                 ),
                 dcc.Input(
-                    type='number',
+                    type='text',
                     className='text-input',
                     id='codigo-submuestra-input',
                     placeholder=''
