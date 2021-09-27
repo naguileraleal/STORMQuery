@@ -158,7 +158,7 @@ def is_sample(idMuestra,c):
 
     # idMuestra es de la forma ['codigoMuestra','codigoSubMuestra']
 
-    query = "select id from muestras where muestra={0} and submuestra={1}".format(
+    query = "select id from muestras where muestra like '{0}' and submuestra like '{1}'".format(
         idMuestra[0],
         idMuestra[1]
         )
@@ -172,18 +172,6 @@ def is_sample(idMuestra,c):
 
     return res
 
-'''
-    l = c.execute("SELECT tabla FROM instrumentos").fetchall()
-    allInstrumentTables = list()
-    for i in l:
-        allInstrumentTables.append(i[0])
-
-    for table in allInstrumentTables:
-        query = "SELECT * FROM {0} WHERE muestra LIKE '{1}'".format(table,barcode)
-        if c.execute(query).fetchall():
-            return True
-    return False
-'''
 
 
 # ARCHIVO getDbNames.py
@@ -405,7 +393,29 @@ from funciones.codigosError import CodigosError
 import logging
 
 def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
-    # TODO: De que tipo es fechaInicio fechaFin??
+    '''
+    Parametros
+    ----------
+    muestra : str
+        Codigo de muestra de la muestra
+
+    subMuestra : str
+        Codigo de sub-muestra de la muestra
+
+    fechaInicio : str
+        Limite inferior del rango de fechas de la consulta (Formato ISO)
+    
+    fechaFin : str
+        Limite superior del rango de fechas de la consulta (Formato ISO)
+    
+    Devuelve
+    --------
+    Si se genera un grafico (no vacio) para la muestra, devuelve un plot de tipo plotly.go.Figure
+    
+    Si la consulta retorna vacia, devuelve CodigosError.NO_HAY_DATOS
+
+    Si no existe una muestra con los identificadores dados en la entrada, devuelve CodigosError.NO_EXISTE_MUESTRA
+    '''
 
     logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
 

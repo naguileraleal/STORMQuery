@@ -7,7 +7,7 @@ def is_sample(idMuestra,c):
 
     # idMuestra es de la forma ['codigoMuestra','codigoSubMuestra']
 
-    query = "select id from muestras where muestra={0} and submuestra={1}".format(
+    query = "select id from muestras where muestra like '{0}' and submuestra like '{1}'".format(
         idMuestra[0],
         idMuestra[1]
         )
@@ -20,16 +20,3 @@ def is_sample(idMuestra,c):
         res = True
 
     return res
-
-'''
-    l = c.execute("SELECT tabla FROM instrumentos").fetchall()
-    allInstrumentTables = list()
-    for i in l:
-        allInstrumentTables.append(i[0])
-
-    for table in allInstrumentTables:
-        query = "SELECT * FROM {0} WHERE muestra LIKE '{1}'".format(table,barcode)
-        if c.execute(query).fetchall():
-            return True
-    return False
-'''
