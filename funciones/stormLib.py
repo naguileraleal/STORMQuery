@@ -481,7 +481,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                     row['endereco'],
                     ( idate, edate )
                     )
-                if data and not data.empty:
+                if data is not None and not data.empty:
                     plot.add_trace(
                         go.Scatter(
                             x=data.iloc[:,0],
@@ -490,7 +490,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                         )
                     )
 
-        if data == None or data.empty:
+        if data is None or data.empty:
             res = CodigosError.NO_HAY_DATOS
             logging.debug(
                 'no hay datos para muestra: {} submuestra: {}'.format(muestra, subMuestra)
