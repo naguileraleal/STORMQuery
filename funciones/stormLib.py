@@ -439,7 +439,10 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
         for index, row in sample_ins.iterrows():
             #%H:%M:%S
             ingreso = datetime.strptime(str(row['ingreso']),'%Y-%m-%d %H:%M:%S').date()
-            egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S').date()
+            if row['salida'] == None:
+                egreso = date.today()
+            else:
+                egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S').date()
 
             if fechaInicio == None:
                 fechaInicio = date(1970,1,1)
@@ -451,6 +454,8 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
             else:
                 fechaFin = date.fromisoformat(fechaFin)
             
+            logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
+            logging.debug('ingreso: {} egreso: {}'.format(ingreso,egreso))
 
             # Si la muestra salio del instrumento antes del comienzo de mi busqueda (egreso < fechaInicio)
             # no tiene sentido buscar datos en este instrumento
@@ -476,7 +481,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                     row['endereco'],
                     ( idate, edate )
                     )
-                if not data.empty:
+                if data and not data.empty:
                     plot.add_trace(
                         go.Scatter(
                             x=data.iloc[:,0],
@@ -485,7 +490,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                         )
                     )
 
-        if data.empty:
+        if data == None or data.empty:
             res = CodigosError.NO_HAY_DATOS
             logging.debug(
                 'no hay datos para muestra: {} submuestra: {}'.format(muestra, subMuestra)
