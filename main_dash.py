@@ -222,14 +222,21 @@ def callbackGenerarConsulta(
             logging.debug('plot: {}'.format(plot))
 
             if res == CodigosError.NO_HAY_DATOS:
+                if (fechaInicio is None and fechaFin is None):
+                    alertMessage = 'No hay datos de temperatura para la muestra {0}:{1}'.format(
+                            muestra,
+                            subMuestra
+                        )
+                else:
+                    alertMessage = 'No hay datos de temperatura para la muestra {0}:{1} en el rango de fechas {2} -> {3}'.format(
+                                muestra,
+                                subMuestra,
+                                fechaInicio,
+                                fechaFin
+                            )
                 alertasContainerChildren.append(
                     dbc.Alert(
-                        'No hay datos para la muestra {0}:{1} en el rango de fechas {2} -> {3}'.format(
-                            muestra,
-                            subMuestra,
-                            fechaInicio,
-                            fechaFin
-                        ),
+                        alertMessage,
                         color='warning',
                         duration=duracionAlertas,
                         className='alerta',
