@@ -3,7 +3,7 @@ MDB_SERVER_ADDR = '192.168.4.220'
 MDB_SERVER_PORT = 3306
 MDB_USER = 'stt'
 MDB_USER_PASSWORD = '122122'
-MDB_DB_NAME = 'stormtest2'
+MDB_DB_NAME = 'stormtest3'
 
 SDB_SERVER_ADDR = '192.168.4.220'
 SDB_SERVER_PORT = 3306
@@ -19,7 +19,8 @@ INSTRUMENT_MODEL_NUMBER = {
     73:'mt512elog',
     44:'mt543ri',
     16:'mt512ri',
-    26:'ti33ri'
+    26:'ti33ri',
+    53:'mt530super'
     }
 
 # Comandos
