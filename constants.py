@@ -19,7 +19,8 @@ INSTRUMENT_MODEL_NUMBER = {
     73:'mt512elog',
     44:'mt543ri',
     16:'mt512ri',
-    26:'ti33ri'
+    26:'ti33ri',
+    53:'mt530super'
     }
 
 # Comandos
@@ -31,7 +32,7 @@ COMMANDS = {
 # Logging level
 # Use CRITICAL for production
 # Use DEBUG for debugging
-logLevel = 'DEBUG'
+logLevel = 'CRITICAL'
 
 # Dash debug server mode
-dashDebugMode = True
+dashDebugMode = False
