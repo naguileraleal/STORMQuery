@@ -1,6 +1,17 @@
-from datetime import date
-from funciones.codigosError import CodigosError
+from datetime import datetime
+
+import pandas as pd
+
 import logging
+
+import utils
+from funciones.codigosError import CodigosError
+from funciones.subfunciones.isSample import is_sample
+from funciones.subfunciones.getTempFromDb import get_temp_from_db
+from funciones.subfunciones.getSampleInstruments import get_sample_instruments
+
+import plotly.graph_objects as go
+
 
 def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
     '''
@@ -34,6 +45,8 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
     mdb = utils.nuevaConexionMDB()
     c = mdb.cursor()
 
+    data = list()
+
     if is_sample([muestra,subMuestra], c):
 
         sample_ins = get_sample_instruments([muestra,subMuestra], c)
@@ -43,28 +56,27 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
         logging.debug('sample_ins:')
         logging.debug(sample_ins)
 
-        data = pd.DataFrame()
+        if not fechaInicio:
+            fechaInicio = datetime(1970,1,1,0,0,0)
+        else:
+            fechaInicio = datetime.fromisoformat(fechaInicio)
+            
+        if not fechaFin:
+            fechaFin = datetime.now()
+        else:
+            fechaFin = datetime.fromisoformat(fechaFin)
+        
+        logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
 
         # A get_temp le paso type(dateRange) = (datetime, datetime)
         for index, row in sample_ins.iterrows():
             #%H:%M:%S
-            ingreso = datetime.strptime(str(row['ingreso']),'%Y-%m-%d %H:%M:%S').date()
-            if row['salida'] == None:
-                egreso = date.today()
+            ingreso = datetime.strptime(str(row['ingreso']),'%Y-%m-%d %H:%M:%S')
+            if pd.isnull(row['salida']):
+                egreso = datetime.now()
             else:
-                egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S').date()
+                egreso = datetime.strptime(str(row['salida']),'%Y-%m-%d %H:%M:%S')
 
-            if fechaInicio == None:
-                fechaInicio = date(1970,1,1)
-            else:
-                fechaInicio = date.fromisoformat(fechaInicio)
-            
-            if fechaFin == None:
-                fechaFin = datetime.now().date()
-            else:
-                fechaFin = date.fromisoformat(fechaFin)
-            
-            logging.debug('fechaInicio: {} fechaFin: {}'.format(fechaInicio,fechaFin))
             logging.debug('ingreso: {} egreso: {}'.format(ingreso,egreso))
 
             # Si la muestra salio del instrumento antes del comienzo de mi busqueda (egreso < fechaInicio)
@@ -91,16 +103,23 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                     row['endereco'],
                     ( idate, edate )
                     )
-                if data is not None and not data.empty:
-                    plot.add_trace(
-                        go.Scatter(
-                            x=data.iloc[:,0],
-                            y=data.iloc[:,1],
-                            name=row['nombre']
-                        )
-                    )
+                
+                logging.debug("get_temp_from_db result:")
+                logging.debug(data)
 
-        if data is None or data.empty:
+                if data:
+                    for dataPeriod in data:
+                        plot.add_trace(
+                            go.Scatter(
+                                x=dataPeriod.iloc[:,0],
+                                y=dataPeriod.iloc[:,1],
+                                name=row['nombre'],
+                                mode='lines',
+                                connectgaps=False
+                            )
+                        )
+
+        if not data:
             res = CodigosError.NO_HAY_DATOS
             logging.debug(
                 'no hay datos para muestra: {} submuestra: {}'.format(muestra, subMuestra)
@@ -116,7 +135,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
             )
 
 
-            logging.debug('se encontraron {} datos para muestra: {} submuestra: {}'.format(data.shape[0],muestra,subMuestra))
+            #logging.debug('se encontraron {} datos para muestra: {} submuestra: {}'.format(data.shape[0],muestra,subMuestra))
 
         mdb.close()
 

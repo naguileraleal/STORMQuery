@@ -5,11 +5,18 @@ import dash_core_components as dcc
 from dash_html_components.Div import Div
 import dash_bootstrap_components as dbc
 import dash_html_components as html
-import plotly.graph_objs as go
-from datetime import date
 
-from funciones.stormLib import *
+from datetime import date
+from datetime import datetime
+
+import plotly.graph_objs as go
 from plotly.offline.offline import plot
+
+import constants as const
+from funciones.codigosError import CodigosError
+from funciones.query_sin_lector import query_sin_lector
+
+import logging
 
 
 # Variables Globales
@@ -114,7 +121,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                 ),
                 dcc.Input(
                     type='text',
-                    className='text-input',
+                    className='text-input input',
                     id='codigo-muestra-input',
                     placeholder=''
                 ),
@@ -125,7 +132,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                 ),
                 dcc.Input(
                     type='text',
-                    className='text-input',
+                    className='text-input input',
                     id='codigo-submuestra-input',
                     placeholder=''
                 ),
@@ -136,7 +143,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                 ),
                 dcc.DatePickerRange(
                     id='rango-fechas-consulta-datepicker',
-                    className='datepicker dash-bootstrap',
+                    className='datepicker dash-bootstrap input',
                     min_date_allowed=date(2010, 1, 1),
                     max_date_allowed=date.today(),
                     initial_visible_month=date.today()

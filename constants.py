@@ -11,14 +11,11 @@ SDB_USER = 'stt'
 SDB_USER_PASSWORD = '122122'
 SDB_DB_NAME = 'datos_sitrad'
 
-# Mensaje de bienvenida en la consola
-MESSAGE_PATH = './mensajeInicial.txt'
-
 # Mapeo Model Number -> Table Name
 INSTRUMENT_MODEL_NUMBER = {
     73:'mt512elog',
     44:'mt543ri',
-    16:'mt512ri',
+    16:'mt512Ri',
     26:'ti33ri',
     53:'mt530super'
     }
