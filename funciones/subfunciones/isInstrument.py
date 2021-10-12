@@ -1,3 +1,5 @@
+import traceback
+
 def is_instrument(instrument,c):
     # La variable c es el cursor de base de datos
     try: # placeholder ':nombre', paso un dictionary a execute()

@@ -1,6 +1,5 @@
 import logging
 
-
 def is_sample(idMuestra,c):
 
     res = False

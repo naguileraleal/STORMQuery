@@ -1,4 +1,9 @@
 import logging
+import mariadb
+import utils
+from math import trunc
+import pandas as pd
+import constants as const
 
 
 def get_temp_from_db(dbName,instrumentAddress,dateRange):
@@ -41,6 +46,7 @@ def get_temp_from_db(dbName,instrumentAddress,dateRange):
 
         # Cuando se cambia un termostato Full Gauge por otro en el mismo instrumento, la endereco queda igual para
         # ambos, ya no se cumple que tengo una endereco por instrumento.
+        dataPeriods = list()
         data = pd.DataFrame()
 
         for i in range(0,instruments.shape[0]):
@@ -69,16 +75,15 @@ def get_temp_from_db(dbName,instrumentAddress,dateRange):
             c.execute(query)
             result = c.fetchall()
 
-            data = data.append(
-                pd.DataFrame([*result],columns=['time','temp']), ignore_index=True
-                )
-
-            logging.debug('data:')
-            logging.debug(data.to_string())
+            if result:
+                data = pd.DataFrame([*result],columns=['time','temp'])
+                dataPeriods.append(data)
+                logging.debug('data:')
+                logging.debug(data.to_string())
 
         db.close()
 
-        return data
+        return dataPeriods
 
     except mariadb.Error as e:
         print(e)

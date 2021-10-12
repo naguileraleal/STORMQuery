@@ -1,5 +1,4 @@
-import logging
-
+import pandas as pd
 
 def get_sample_instruments(idMuestra, c):
 
