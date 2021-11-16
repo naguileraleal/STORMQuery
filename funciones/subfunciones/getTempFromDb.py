@@ -6,10 +6,31 @@ import pandas as pd
 import constants as const
 
 
-def get_temp_from_db(dbName,instrumentAddress,dateRange):
-    # Esta funcion busca en las bases de datos de Sitrad
-    # los datos en la columna 'temperatura' entre las
-    # fechas dadas, del instrumento dado.
+def get_temp_from_db(dbName,instrumentAddress,dateRange,probe=None):
+    '''
+    Busca en las bases de datos de Sitrad  los datos en la columna 'temperatura' entre las fechas dadas, del instrumento dado
+    Si tiene muchas columnas de temperatura, busca en la columna 'temperatura'+str(probe)
+
+    Parametros
+    ----------
+    dbName : str
+        El nombre de la base de datos de sitrad en la que se quiere buscar
+    
+    instrumentAddress : int
+        La direccion del instrumento en la red de Sitrad
+
+    dateRange : tuple(datetime.datetime, datetime.datetime)
+        Rango de fechas de la consulta
+    
+    probe : int
+        La probe del instrumento de la que se quere obtener la temperatura. Para equipos con una sola probe vale None.
+
+    Devuelve
+    --------
+    dataPeriods : list(pandas.DataFrame)
+        Lista de dataframes. Cada uno contiene datos (timestamp, temp) del instrumento en el periodo dateRange.
+
+    '''
 
     # dateRange es una tupla con dos objetos de la clase datetime
 
@@ -25,50 +46,50 @@ def get_temp_from_db(dbName,instrumentAddress,dateRange):
         db = utils.nuevaConexionSDB()
         c = db.cursor()
 
-        logging.debug('dateRange: {} {}'.format(dateRange[0],dateRange[1]))
-
-        real_instrumentAddress = float(instrumentAddress)
-        int_instrumentAddress = int(trunc(real_instrumentAddress))
+        logging.debug('probe is None: {}'.format(probe is None))
+        logging.debug('probe: {}'.format(probe))
        
         # Obtener todos los instrumentos con la direccion de red que busco
-        # Para un ti33, instrumentAddress tiene formato 'address.probe'
-        # Para el resto de los instrumentos, tiene formato 'address'
+        # La mayoria de los instrumentos tienen una sola probe de temperatura
+        # Otros como el ti33ri tienen tres. La columna 'probe' de la tabla 'gabinetes' indica que probe es la que corresponde al gabinete.
+
         c.execute(
-            "SELECT id, modelo, endereco FROM instrumentos WHERE endereco=?",(int_instrumentAddress,)
+            "SELECT id, modelo, endereco FROM instrumentos WHERE endereco=?",(instrumentAddress,)
             )
         
         result = c.fetchall()
         instruments = pd.DataFrame([*result],columns=['id','modelo','direccion'])
 
-        probe = trunc((real_instrumentAddress - int_instrumentAddress)*10)
-        probe = str(probe)
-        instrumentAddress = str(int_instrumentAddress)
+        logging.debug('sample instruments: ')
+        logging.debug(instruments)
 
-        # Cuando se cambia un termostato Full Gauge por otro en el mismo instrumento, la endereco queda igual para
-        # ambos, ya no se cumple que tengo una endereco por instrumento.
+        # Cuando se cambia un termostato Full Gauge por otro en el mismo instrumento, la endereco queda igual para ambos, ya no se cumple que tengo una endereco por instrumento.
         dataPeriods = list()
         data = pd.DataFrame()
 
         for i in range(0,instruments.shape[0]):
             # BETWEEN selecciona datos incluyendo los valores limites
-            if probe == '0':
+
+            tableName = const.INSTRUMENT_MODEL_NUMBER[instruments['modelo'].iloc[i]]
+
+            if probe:
                 query = (
-                    "SELECT data, TRUNCATE(temperatura/10, 1) FROM {0} WHERE id LIKE {1} AND data BETWEEN '{2}' AND '{3}'"
+                    "SELECT data, TRUNCATE(temperatura{0}/10,1) FROM {1} WHERE id={2} AND data BETWEEN '{3}' AND '{4}'"
+                        ).format(
+                            probe,
+                            tableName,
+                            str(instruments.id.values[i]).strip('[]'),
+                            dateRange[0].strftime('%Y-%m-%d %H:%M:%S'),
+                            dateRange[1].strftime('%Y-%m-%d %H:%M:%S')
+                            )
+            else:
+                query = (
+                    "SELECT data, TRUNCATE(temperatura/10, 1) FROM {0} WHERE id={1} AND data BETWEEN '{2}' AND '{3}'"
                          ).format(
-                             const.INSTRUMENT_MODEL_NUMBER[instruments['modelo'].iloc[i]],
+                             tableName,
                              str(instruments.id.values[i]).strip('[]'),
                              dateRange[0].strftime('%Y-%m-%d %H:%M:%S'),dateRange[1].strftime('%Y-%m-%d %H:%M:%S')
                          )
-
-            else:
-                query = (
-                        "SELECT data, TRUNCATE(temperatura{0}/10,1) FROM {1} WHERE id LIKE {2} AND data BETWEEN '{3}' AND '{4}'"
-                         ).format(
-                             probe,
-                             str(instruments.nombre.values[i]).strip('[]'),
-                             str(instruments.id.values[i]).strip('[]'),
-                             dateRange[0].strftime('%Y-%m-%d %H:%M:%S'),dateRange[1].strftime('%Y-%m-%d %H:%M:%S')
-                             )
            
             logging.debug('query: {}'.format(query))
 

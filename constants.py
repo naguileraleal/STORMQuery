@@ -3,7 +3,7 @@ MDB_SERVER_ADDR = '192.168.4.220'
 MDB_SERVER_PORT = 3306
 MDB_USER = 'stt'
 MDB_USER_PASSWORD = '122122'
-MDB_DB_NAME = 'stormtest3'
+MDB_DB_NAME = 'dbstorm'
 
 SDB_SERVER_ADDR = '192.168.4.220'
 SDB_SERVER_PORT = 3306
@@ -29,7 +29,7 @@ COMMANDS = {
 # Logging level
 # Use CRITICAL for production
 # Use DEBUG for debugging
-logLevel = 'CRITICAL'
+logLevel = 'DEBUG'
 
 # Dash debug server mode
-dashDebugMode = False
+dashDebugMode = True
