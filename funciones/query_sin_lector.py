@@ -101,7 +101,8 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
 
                 data = get_temp_from_db('',
                     row['endereco'],
-                    ( idate, edate )
+                    ( idate, edate ),
+                    probe=row['probe']
                     )
                 
                 logging.debug("get_temp_from_db result:")
@@ -114,7 +115,7 @@ def query_sin_lector(muestra, subMuestra, fechaInicio, fechaFin, plot):
                                 x=dataPeriod.iloc[:,0],
                                 y=dataPeriod.iloc[:,1],
                                 name=row['nombre'],
-                                mode='lines',
+                                mode='lines+markers',
                                 connectgaps=False
                             )
                         )

@@ -19,11 +19,12 @@ def get_sample_instruments(idMuestra, c):
     4. RES = PROJECT<nombre,ingreso,salida,endereco>(J1)
     '''
 
-    RES = "select nombre,ingreso,salida,endereco from (\
-        ((select id,nombre,endereco from gabinetes where deleted=0) as q1)\
-        join ((select idInstrumento,ingreso,salida from muestras where \
-        deleted=0 and muestra=? and submuestra=?) as q2)\
-        on q1.id = q2.idinstrumento)"
+    RES = '''
+    select nombre,ingreso,salida,endereco,probe from (
+        ((select id,nombre,endereco,probe from gabinetes where deleted=0) as q1)join ((select idInstrumento,ingreso,salida from muestras where 
+        deleted=0 and muestra=? and submuestra=?) as q2)
+        on q1.id = q2.idinstrumento)
+    '''
 
     c.execute(
         RES,
@@ -34,7 +35,7 @@ def get_sample_instruments(idMuestra, c):
     res = c.fetchall()
 
     data = pd.DataFrame(
-        [*res],columns=['nombre','ingreso','salida','endereco']
+        [*res],columns=['nombre','ingreso','salida','endereco','probe']
     )
 
 
