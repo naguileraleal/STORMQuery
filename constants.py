@@ -29,7 +29,7 @@ COMMANDS = {
 # Logging level
 # Use CRITICAL for production
 # Use DEBUG for debugging
-logLevel = 'DEBUG'
+logLevel = 'CRITICAL'
 
 # Dash debug server mode
-dashDebugMode = True
+dashDebugMode = False
